@@ -1,11 +1,12 @@
 {
   "name": "antifake-email",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "license": "ISC",
   "author": "",
   "type": "module",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "node --test"
   }
