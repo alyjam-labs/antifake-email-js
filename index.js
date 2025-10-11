@@ -7,12 +7,14 @@ function hostnameFromEmailAddress(email) {
 }
 
 export function isFakeDomain(domain, json = false) {
+  if (!domain || typeof domain !== 'string') return false;
+  const normalizedDomain = domain.toLowerCase().trim();
   if (!json) json = static_json_v1;
   for (let dom of Object.keys(json.domains)) {
     // exact match
-    if (dom === domain.toLowerCase().trim()) return dom;
+    if (dom === normalizedDomain) return dom;
     // subdomain match
-    if (domain.search(new RegExp(`.+\.${dom}`)) === 0) return dom;
+    if (normalizedDomain.search(new RegExp(`.+\\.${dom.replace(/\./g, '\\.')}$`)) === 0) return dom;
   }
   return false;
 }
