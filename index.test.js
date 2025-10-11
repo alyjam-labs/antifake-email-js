@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { isFakeDomain, isFakeEmail } from "./index.js";
+import { isFakeDomain, isFakeEmail, isPlusAddressingEmail } from "./index.js";
 
 // Mock data for testing
 const mockJson = {
@@ -286,6 +286,193 @@ describe("isFakeEmail", () => {
         isFakeEmail("user@guerrillamail.com", mockJson),
         "guerrillamail.com"
       );
+    });
+  });
+});
+
+describe("isPlusAddressingEmail", () => {
+  describe("emails with plus addressing", () => {
+    it("should return true for email with plus in local part", () => {
+      const result = isPlusAddressingEmail("user+tag@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for email with plus and text after", () => {
+      const result = isPlusAddressingEmail("john+shopping@gmail.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for email with plus at end of local part", () => {
+      const result = isPlusAddressingEmail("user+@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for email with multiple plus signs", () => {
+      const result = isPlusAddressingEmail("user+tag+extra@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for email with numbers after plus", () => {
+      const result = isPlusAddressingEmail("user+123@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for email with special characters after plus", () => {
+      const result = isPlusAddressingEmail("user+tag.test@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for short local part with plus", () => {
+      const result = isPlusAddressingEmail("a+b@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should return true for complex local part with plus", () => {
+      const result = isPlusAddressingEmail("first.last+tag123@example.com");
+      assert.strictEqual(result, true);
+    });
+  });
+
+  describe("emails without plus addressing", () => {
+    it("should return false for email without plus sign", () => {
+      const result = isPlusAddressingEmail("user@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with dots but no plus", () => {
+      const result = isPlusAddressingEmail("first.last@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with numbers but no plus", () => {
+      const result = isPlusAddressingEmail("user123@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with hyphens but no plus", () => {
+      const result = isPlusAddressingEmail("user-name@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with underscores but no plus", () => {
+      const result = isPlusAddressingEmail("user_name@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for simple email", () => {
+      const result = isPlusAddressingEmail("test@gmail.com");
+      assert.strictEqual(result, false);
+    });
+  });
+
+  describe("emails with plus in domain", () => {
+    it("should return false for plus only in domain part", () => {
+      // Plus sign is in domain, not local part
+      const result = isPlusAddressingEmail("user@example+domain.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return true for plus in local part even if plus in domain", () => {
+      const result = isPlusAddressingEmail("user+tag@example+domain.com");
+      assert.strictEqual(result, true);
+    });
+  });
+
+  describe("invalid email formats", () => {
+    it("should return false for email without @", () => {
+      const result = isPlusAddressingEmail("userexample.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with @ at start", () => {
+      const result = isPlusAddressingEmail("@example.com");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with @ at end", () => {
+      const result = isPlusAddressingEmail("user@");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for email with only @", () => {
+      const result = isPlusAddressingEmail("@");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for string with plus but no @", () => {
+      const result = isPlusAddressingEmail("user+tag");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return true for multiple @ symbols if local part has plus", () => {
+      // Even though this is invalid email format, the function checks the local part
+      const result = isPlusAddressingEmail("user+tag@name@example.com");
+      assert.strictEqual(result, true);
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should return false for empty string", () => {
+      const result = isPlusAddressingEmail("");
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for null", () => {
+      const result = isPlusAddressingEmail(null);
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for undefined", () => {
+      const result = isPlusAddressingEmail(undefined);
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for non-string number", () => {
+      const result = isPlusAddressingEmail(12345);
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for object", () => {
+      const result = isPlusAddressingEmail({});
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for array", () => {
+      const result = isPlusAddressingEmail([]);
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for boolean", () => {
+      const result = isPlusAddressingEmail(true);
+      assert.strictEqual(result, false);
+    });
+
+    it("should return false for whitespace only", () => {
+      const result = isPlusAddressingEmail("   ");
+      assert.strictEqual(result, false);
+    });
+  });
+
+  describe("special formatting", () => {
+    it("should return true for email with spaces around plus", () => {
+      // Note: This is technically invalid email format, but the function checks if plus exists
+      const result = isPlusAddressingEmail("user + tag@example.com");
+      assert.strictEqual(result, true);
+    });
+
+    it("should handle email with leading/trailing spaces", () => {
+      const result = isPlusAddressingEmail("  user+tag@example.com  ");
+      assert.strictEqual(result, true);
+    });
+
+    it("should handle uppercase email with plus", () => {
+      const result = isPlusAddressingEmail("USER+TAG@EXAMPLE.COM");
+      assert.strictEqual(result, true);
+    });
+
+    it("should handle mixed case email with plus", () => {
+      const result = isPlusAddressingEmail("UsEr+TaG@ExAmPlE.com");
+      assert.strictEqual(result, true);
     });
   });
 });

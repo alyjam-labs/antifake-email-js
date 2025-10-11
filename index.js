@@ -22,3 +22,11 @@ export function isFakeDomain(domain, json = false) {
 export function isFakeEmail(email, json = false) {
   return isFakeDomain(hostnameFromEmailAddress(email), json);
 }
+
+export function isPlusAddressingEmail(email) {
+  if (email && typeof email === "string" && email.search(/@/) > 0) {
+    const localPart = email.split(/@/)[0];
+    return localPart.includes('+');
+  }
+  return false;
+}
